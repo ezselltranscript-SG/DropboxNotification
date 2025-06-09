@@ -104,11 +104,9 @@ export async function listFolderChanges() {
 
     if (!cursor) {
       console.log('📥 Getting latest cursor state...');
-      const originalPath = process.env.DROPBOX_FOLDER_PATH || '';
-      console.log('🔍 Original path:', originalPath);
-      
-      const path = formatDropboxPath(originalPath);
-      console.log('🔍 Formatted path:', path);
+      // Use the path directly from env, ensuring it starts with a slash
+      const path = process.env.DROPBOX_FOLDER_PATH || '';
+      console.log('🔍 Using path:', path);
 
       const response = await dbx.filesListFolder({
         path,
