@@ -1,5 +1,4 @@
 import { listFolderChanges } from './dropboxClient.js';
-import { checkIfProcessed, markAsProcessed } from './supabaseClient.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -27,26 +26,20 @@ export async function handleDropboxChanges(accountId) {
     return;
   }
 
+  // Process each new file
   for (const entry of changes) {
-    // Log every path seen
-    console.log('📦 Dropbox entry:', entry.path_display);
-
-    // Only consider file entries inside the target folder
-    if (
-      entry['.tag'] === 'file' &&
-      entry.path_display.startsWith(process.env.DROPBOX_FOLDER_PATH)
-    ) {
-      const fileName = entry.path_display.split('/').pop();
-      console.log(`📄 File candidate in folder: ${fileName}`);
-
-      const alreadyProcessed = await checkIfProcessed(entry.id);
-      if (alreadyProcessed) {
-        console.log(`✅ Already processed: ${fileName}`);
-        continue;
+    const fileName = entry.path_display.split('/').pop();
+    console.log(`🚀 Processing new file: ${fileName}`);
+    
+    // Here you can add your custom processing logic
+    // For example, sending to a webhook or processing the file
+    if (process.env.WEBHOOK_URL) {
+      try {
+        await axios.post(process.env.WEBHOOK_URL, entry);
+        console.log(`✅ Webhook notification sent for: ${fileName}`);
+      } catch (error) {
+        console.error(`❌ Failed to send webhook for ${fileName}:`, error.message);
       }
-
-      console.log(`🚀 New file uploaded: ${fileName}`);
-      await markAsProcessed(entry);
     }
   }
 }
