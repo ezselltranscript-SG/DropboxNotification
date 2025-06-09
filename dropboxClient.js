@@ -88,10 +88,16 @@ export async function listFolderChanges() {
 
     if (!cursor) {
       console.log('📥 Getting latest cursor state...');
-      // Ensure path starts with '/' and doesn't end with '/'
+      // Convert root path '/' to empty string, otherwise ensure proper format
       let path = process.env.DROPBOX_FOLDER_PATH || '';
-      path = path.startsWith('/') ? path : `/${path}`;
-      path = path.endsWith('/') ? path.slice(0, -1) : path;
+      console.log('🔍 Original path:', path);
+      if (path === '/') {
+        path = '';
+      } else {
+        path = path.startsWith('/') ? path : `/${path}`;
+        path = path.endsWith('/') ? path.slice(0, -1) : path;
+      }
+      console.log('🔍 Formatted path:', path);
 
       const response = await dbx.filesListFolder({
         path,
