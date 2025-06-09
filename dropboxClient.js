@@ -42,11 +42,29 @@ async function refreshAccessToken() {
   }
 }
 
+// Format path for Dropbox API
+function formatDropboxPath(path) {
+  // Remove leading and trailing slashes
+  path = path.replace(/^\/+|\/+$/g, '');
+  
+  // If path is not empty, encode it and add leading slash
+  if (path) {
+    // Split by '/' and encode each segment
+    return '/' + path.split('/').map(segment => 
+      encodeURIComponent(segment)
+    ).join('/');
+  }
+  return '';
+}
+
 // Get metadata for a file
 async function getMetadata(path) {
   try {
+    const formattedPath = formatDropboxPath(path);
+    console.log('🔍 Getting metadata for path:', formattedPath);
+    
     const response = await dbx.filesGetMetadata({
-      path: path,
+      path: formattedPath,
       include_media_info: process.env.INCLUDE_MEDIA === 'true'
     });
     return response.result;
@@ -65,8 +83,11 @@ async function getMetadata(path) {
 // Get temporary link for a file
 async function getTemporaryLink(path) {
   try {
+    const formattedPath = formatDropboxPath(path);
+    console.log('🔍 Getting temporary link for path:', formattedPath);
+    
     const response = await dbx.filesGetTemporaryLink({
-      path: path
+      path: formattedPath
     });
     return response.result.link;
   } catch (error) {
@@ -88,21 +109,10 @@ export async function listFolderChanges() {
 
     if (!cursor) {
       console.log('📥 Getting latest cursor state...');
-      // Format and encode the path properly for Dropbox API
-      let path = process.env.DROPBOX_FOLDER_PATH || '';
-      console.log('🔍 Original path:', path);
+      const originalPath = process.env.DROPBOX_FOLDER_PATH || '';
+      console.log('🔍 Original path:', originalPath);
       
-      // Remove leading and trailing slashes
-      path = path.replace(/^\/+|\/+$/g, '');
-      
-      // If path is not empty, encode it and add leading slash
-      if (path) {
-        // Split by '/' and encode each segment
-        path = '/' + path.split('/').map(segment => 
-          encodeURIComponent(segment)
-        ).join('/');
-      }
-      
+      const path = formatDropboxPath(originalPath);
       console.log('🔍 Formatted path:', path);
 
       const response = await dbx.filesListFolder({
