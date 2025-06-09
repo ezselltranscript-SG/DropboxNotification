@@ -8,11 +8,8 @@ let dbx = null;
 // Initialize Dropbox client
 function initializeDropboxClient() {
   if (!dbx) {
-    dbx = new Dropbox.Dropbox({
-      accessToken: process.env.DROPBOX_ACCESS_TOKEN,
-      refreshToken: process.env.DROPBOX_REFRESH_TOKEN,
-      clientId: process.env.DROPBOX_APP_KEY,
-      clientSecret: process.env.DROPBOX_APP_SECRET
+    dbx = new Dropbox({
+      accessToken: process.env.DROPBOX_TOKEN
     });
   }
   return dbx;
