@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: dropbox-webhook-server
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        sync: false
+      - key: DROPBOX_TOKEN
+        sync: false
+      - key: DROPBOX_FOLDER_PATH
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
