@@ -88,15 +88,21 @@ export async function listFolderChanges() {
 
     if (!cursor) {
       console.log('📥 Getting latest cursor state...');
-      // Convert root path '/' to empty string, otherwise ensure proper format
+      // Format and encode the path properly for Dropbox API
       let path = process.env.DROPBOX_FOLDER_PATH || '';
       console.log('🔍 Original path:', path);
-      if (path === '/') {
-        path = '';
-      } else {
-        path = path.startsWith('/') ? path : `/${path}`;
-        path = path.endsWith('/') ? path.slice(0, -1) : path;
+      
+      // Remove leading and trailing slashes
+      path = path.replace(/^\/+|\/+$/g, '');
+      
+      // If path is not empty, encode it and add leading slash
+      if (path) {
+        // Split by '/' and encode each segment
+        path = '/' + path.split('/').map(segment => 
+          encodeURIComponent(segment)
+        ).join('/');
       }
+      
       console.log('🔍 Formatted path:', path);
 
       const response = await dbx.filesListFolder({
