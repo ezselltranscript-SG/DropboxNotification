@@ -44,15 +44,12 @@ async function refreshAccessToken() {
 
 // Format path for Dropbox API
 function formatDropboxPath(path) {
-  // Remove any extra slashes and ensure single leading slash
-  path = path.replace(/\/+/g, '/').replace(/^\/*/g, '/');
-  
-  // If path is just a slash, return empty string as per Dropbox API
-  if (path === '/') {
+  if (!path || path === '/') {
     return '';
   }
-  
-  return path;
+
+  // Ensure path starts with exactly one slash and has no trailing slash
+  return '/' + path.replace(/^\/+/, '').replace(/\/+$/, '');
 }
 
 // Get metadata for a file
