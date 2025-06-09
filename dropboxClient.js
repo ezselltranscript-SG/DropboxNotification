@@ -1,5 +1,5 @@
-const { Dropbox } = require('dropbox');
-require('dotenv').config();
+import { Dropbox } from 'dropbox';
+import 'dotenv/config';
 
 let cursor = null;
 let lastModifiedTime = new Date(process.env.LAST_MODIFIED_TIME || 0);
