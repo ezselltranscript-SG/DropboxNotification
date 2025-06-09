@@ -104,9 +104,15 @@ export async function listFolderChanges() {
 
     if (!cursor) {
       console.log('📥 Getting latest cursor state...');
-      // Use the path directly from env, ensuring it starts with a slash
-      const path = process.env.DROPBOX_FOLDER_PATH || '';
-      console.log('🔍 Using path:', path);
+      // Get path from env and ensure it starts with slash
+      let path = process.env.DROPBOX_FOLDER_PATH || '';
+      if (!path.startsWith('/')) {
+        path = '/' + path;
+      }
+      
+      // Replace spaces with %20 as required by Dropbox API
+      path = path.replace(/ /g, '%20');
+      console.log('🔍 Using encoded path:', path);
 
       const response = await dbx.filesListFolder({
         path,
