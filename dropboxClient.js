@@ -5,14 +5,14 @@ let cursor = null;
 let lastModifiedTime = new Date(process.env.LAST_MODIFIED_TIME || 0);
 let dbx = null;
 
-// Initialize Dropbox client with OAuth2 credentials
+// Initialize Dropbox client
 function initializeDropboxClient() {
   if (!dbx) {
-    dbx = new Dropbox({
-      clientId: process.env.DROPBOX_APP_KEY,
-      clientSecret: process.env.DROPBOX_APP_SECRET,
+    dbx = new Dropbox.Dropbox({
       accessToken: process.env.DROPBOX_ACCESS_TOKEN,
-      refreshToken: process.env.DROPBOX_REFRESH_TOKEN
+      refreshToken: process.env.DROPBOX_REFRESH_TOKEN,
+      clientId: process.env.DROPBOX_APP_KEY,
+      clientSecret: process.env.DROPBOX_APP_SECRET
     });
   }
   return dbx;
@@ -104,15 +104,9 @@ export async function listFolderChanges() {
 
     if (!cursor) {
       console.log('📥 Getting latest cursor state...');
-      // Get path from env and ensure it starts with slash
-      let path = process.env.DROPBOX_FOLDER_PATH || '';
-      if (!path.startsWith('/')) {
-        path = '/' + path;
-      }
-      
-      // Replace spaces with %20 as required by Dropbox API
-      path = path.replace(/ /g, '%20');
-      console.log('🔍 Using encoded path:', path);
+      // Use path directly from env, it should be in correct format already (/Letter Project)
+      const path = process.env.DROPBOX_FOLDER_PATH || '';
+      console.log('🔍 Using path:', path);
 
       const response = await dbx.filesListFolder({
         path,
