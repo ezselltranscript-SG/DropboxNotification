@@ -49,8 +49,16 @@ function formatDropboxPath(path) {
     return '';
   }
 
-  // Ensure path starts with exactly one slash and has no trailing slash
-  return '/' + path.replace(/^\/+/, '').replace(/\/+$/, '');
+  // Remove leading/trailing slashes and spaces
+  let formattedPath = path.trim().replace(/^\/+/, '').replace(/\/+$/, '');
+  
+  // Encode spaces and special characters
+  formattedPath = encodeURIComponent(formattedPath);
+  
+  // Decode forward slashes back (Dropbox API expects them unencoded)
+  formattedPath = formattedPath.replace(/%2F/g, '/');
+  
+  return '/' + formattedPath;
 }
 
 // Get metadata for a file
@@ -105,8 +113,8 @@ export async function listFolderChanges() {
 
     if (!cursor) {
       console.log('📥 Getting latest cursor state...');
-      // Use path directly from env, it should be in correct format already (/Letter Project)
-      const path = process.env.DROPBOX_FOLDER_PATH || '';
+      const rawPath = process.env.DROPBOX_FOLDER_PATH || '';
+      const path = formatDropboxPath(rawPath);
       console.log('🔍 Using path:', path);
 
       const response = await dbx.filesListFolder({
