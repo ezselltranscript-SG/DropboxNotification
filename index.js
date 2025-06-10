@@ -1,18 +1,14 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import { verifyChallenge, handleDropboxChanges } from './utils.js';
-import { getAuthorizationUrl, exchangeCodeForTokens, storeTokens } from './auth.js';
+import { exchangeCodeForTokens } from './auth.js';
+import fs from 'fs/promises';
+import path from 'path';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
-
-// OAuth2 login endpoint
-app.get('/oauth/login', (req, res) => {
-  const authUrl = getAuthorizationUrl();
-  res.redirect(authUrl);
-});
 
 // OAuth2 callback endpoint
 app.get('/oauth/callback', async (req, res) => {
@@ -24,12 +20,17 @@ app.get('/oauth/callback', async (req, res) => {
   try {
     // Exchange code for tokens
     const tokens = await exchangeCodeForTokens(code);
+    
+    // Save token to .env file
+    const envPath = path.join(process.cwd(), '.env');
+    const envContent = await fs.readFile(envPath, 'utf8');
+    const updatedContent = envContent.replace(
+      /^DROPBOX_TOKEN=.*$/m,
+      `DROPBOX_TOKEN=${tokens.access_token}`
+    );
+    await fs.writeFile(envPath, updatedContent);
 
-    // Store tokens (using a temporary user ID for now)
-    const userId = process.env.DROPBOX_USER_ID || '1';
-    await storeTokens(userId, tokens);
-
-    res.send('Successfully authenticated with Dropbox!');
+    res.send('Successfully authenticated with Dropbox! You can close this window.');
   } catch (error) {
     console.error('❌ OAuth error:', error);
     res.status(500).send('Failed to authenticate with Dropbox');
@@ -66,5 +67,16 @@ app.post('/webhook', async (req, res) => {
 });
 
 app.listen(PORT, () => {
+  // Construct authorization URL
+  const params = new URLSearchParams({
+    client_id: process.env.DROPBOX_APP_KEY,
+    response_type: 'code',
+    redirect_uri: process.env.REDIRECT_URI,
+    token_access_type: 'offline'
+  });
+  const authUrl = `https://www.dropbox.com/oauth2/authorize?${params.toString()}`;
+
   console.log(`🚀 Dropbox Webhook server running on port ${PORT}`);
+  console.log('\n🔑 To authorize with Dropbox, visit this URL:');
+  console.log(authUrl);
 });

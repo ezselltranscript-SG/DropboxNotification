@@ -1,16 +1,15 @@
 import pkg from 'dropbox';
 const { Dropbox } = pkg;
-import { getValidAccessToken } from './auth.js';
+import 'dotenv/config';
 
 let cursor = null;
 let lastModifiedTime = new Date(process.env.LAST_MODIFIED_TIME || 0);
 
 // Create a new Dropbox client for each operation
-async function createDropboxClient() {
-  const userId = process.env.DROPBOX_USER_ID || '1';
-  const accessToken = await getValidAccessToken(userId);
-  
-  return new Dropbox({ accessToken });
+function createDropboxClient() {
+  return new Dropbox({
+    accessToken: process.env.DROPBOX_TOKEN
+  });
 }
 
 // Format path for Dropbox API

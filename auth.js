@@ -1,7 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
+import fetch from 'node-fetch';
 import 'dotenv/config';
-
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 // Dropbox OAuth configuration
 const config = {
