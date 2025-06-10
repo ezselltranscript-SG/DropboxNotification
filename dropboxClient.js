@@ -52,11 +52,8 @@ function formatDropboxPath(path) {
   // Remove leading/trailing slashes and spaces
   let formattedPath = path.trim();
   
-  // Ensure path starts with exactly one slash
-  formattedPath = '/' + formattedPath.replace(/^\/+/, '');
-  
-  // Remove trailing slashes
-  formattedPath = formattedPath.replace(/\/+$/, '');
+  // Remove any leading or trailing slashes
+  formattedPath = formattedPath.replace(/^\/*/, '').replace(/\/*$/, '');
   
   return formattedPath;
 }
