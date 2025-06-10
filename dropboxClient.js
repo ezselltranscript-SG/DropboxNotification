@@ -50,15 +50,15 @@ function formatDropboxPath(path) {
   }
 
   // Remove leading/trailing slashes and spaces
-  let formattedPath = path.trim().replace(/^\/+/, '').replace(/\/+$/, '');
+  let formattedPath = path.trim();
   
-  // Encode spaces and special characters
-  formattedPath = encodeURIComponent(formattedPath);
+  // Ensure path starts with exactly one slash
+  formattedPath = '/' + formattedPath.replace(/^\/+/, '');
   
-  // Decode forward slashes back (Dropbox API expects them unencoded)
-  formattedPath = formattedPath.replace(/%2F/g, '/');
+  // Remove trailing slashes
+  formattedPath = formattedPath.replace(/\/+$/, '');
   
-  return '/' + formattedPath;
+  return formattedPath;
 }
 
 // Get metadata for a file
