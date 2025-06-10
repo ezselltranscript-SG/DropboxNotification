@@ -1,4 +1,5 @@
-import { Dropbox } from 'dropbox';
+import pkg from 'dropbox';
+const { Dropbox } = pkg;
 import 'dotenv/config';
 
 let cursor = null;
