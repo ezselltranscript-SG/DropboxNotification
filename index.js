@@ -1,11 +1,40 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import { verifyChallenge, handleDropboxChanges } from './utils.js';
+import { getAuthorizationUrl, exchangeCodeForTokens, storeTokens } from './auth.js';
 
 const app = express();
+const PORT = process.env.PORT || 3000;
+
 app.use(bodyParser.json());
 
-const PORT = process.env.PORT || 3000;
+// OAuth2 login endpoint
+app.get('/oauth/login', (req, res) => {
+  const authUrl = getAuthorizationUrl();
+  res.redirect(authUrl);
+});
+
+// OAuth2 callback endpoint
+app.get('/oauth/callback', async (req, res) => {
+  const { code } = req.query;
+  if (!code) {
+    return res.status(400).send('Missing authorization code');
+  }
+
+  try {
+    // Exchange code for tokens
+    const tokens = await exchangeCodeForTokens(code);
+
+    // Store tokens (using a temporary user ID for now)
+    const userId = process.env.DROPBOX_USER_ID || '1';
+    await storeTokens(userId, tokens);
+
+    res.send('Successfully authenticated with Dropbox!');
+  } catch (error) {
+    console.error('❌ OAuth error:', error);
+    res.status(500).send('Failed to authenticate with Dropbox');
+  }
+});
 
 // Dropbox webhook verification
 app.get('/webhook', verifyChallenge);

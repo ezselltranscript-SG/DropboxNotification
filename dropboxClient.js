@@ -1,17 +1,16 @@
 import pkg from 'dropbox';
 const { Dropbox } = pkg;
-import 'dotenv/config';
+import { getValidAccessToken } from './auth.js';
 
 let cursor = null;
 let lastModifiedTime = new Date(process.env.LAST_MODIFIED_TIME || 0);
 
 // Create a new Dropbox client for each operation
-function createDropboxClient() {
-  const client = new Dropbox({
-    accessToken: process.env.DROPBOX_TOKEN
-  });
-
-  return client;
+async function createDropboxClient() {
+  const userId = process.env.DROPBOX_USER_ID || '1';
+  const accessToken = await getValidAccessToken(userId);
+  
+  return new Dropbox({ accessToken });
 }
 
 // Format path for Dropbox API
@@ -37,7 +36,7 @@ function formatDropboxPath(path) {
 // Get metadata for a file
 async function getMetadata(path) {
   try {
-    const dbx = createDropboxClient();
+    const dbx = await createDropboxClient();
     const formattedPath = formatDropboxPath(path);
     console.log('🔍 Getting metadata for path:', formattedPath);
     
@@ -55,7 +54,7 @@ async function getMetadata(path) {
 // Get temporary link for a file
 async function getTemporaryLink(path) {
   try {
-    const dbx = createDropboxClient();
+    const dbx = await createDropboxClient();
     const formattedPath = formatDropboxPath(path);
     console.log('🔍 Getting temporary link for path:', formattedPath);
     
@@ -73,7 +72,7 @@ async function getTemporaryLink(path) {
 export async function listFolderChanges() {
   try {
     // Create a new client for this operation
-    const dbx = createDropboxClient();
+    const dbx = await createDropboxClient();
 
     if (!cursor) {
       console.log('📥 Getting latest cursor state...');
