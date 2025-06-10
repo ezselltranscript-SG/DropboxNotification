@@ -119,6 +119,20 @@ export async function listFolderChanges() {
       const path = formatDropboxPath(rawPath);
       console.log('🔍 Using path:', path);
 
+      // First get a cursor for the path
+      const cursorResponse = await dbx.filesListFolderGetLatestCursor({
+        path,
+        recursive: true,
+        include_deleted: false,
+        include_media_info: process.env.INCLUDE_MEDIA === 'true',
+        include_has_explicit_shared_members: false,
+        include_mounted_folders: true
+      });
+      
+      cursor = cursorResponse.result.cursor;
+      console.log('✅ Got initial cursor:', cursor);
+
+      // Then use filesListFolder with the cursor
       const response = await dbx.filesListFolder({
         path,
         recursive: true,
@@ -128,7 +142,6 @@ export async function listFolderChanges() {
         include_mounted_folders: true
       });
       
-      cursor = response.result.cursor;
       console.log(`✅ Initial fetch complete. Entries: ${response.result.entries.length}`);
       const newEntries = [];
       for (const entry of response.result.entries) {
