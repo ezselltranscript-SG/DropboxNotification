@@ -8,10 +8,7 @@ let lastModifiedTime = new Date(process.env.LAST_MODIFIED_TIME || 0);
 // Create a new Dropbox client for each operation
 function createDropboxClient() {
   const client = new Dropbox({
-    clientId: process.env.DROPBOX_APP_KEY,
-    clientSecret: process.env.DROPBOX_APP_SECRET,
-    accessToken: process.env.DROPBOX_ACCESS_TOKEN,
-    refreshToken: process.env.DROPBOX_REFRESH_TOKEN
+    accessToken: process.env.DROPBOX_ACCESS_TOKEN
   });
 
   return client;
