@@ -10,7 +10,10 @@ let dbx = null;
 function initializeDropboxClient() {
   if (!dbx) {
     dbx = new Dropbox({
-      accessToken: process.env.DROPBOX_TOKEN
+      clientId: process.env.DROPBOX_APP_KEY,
+      clientSecret: process.env.DROPBOX_APP_SECRET,
+      accessToken: process.env.DROPBOX_ACCESS_TOKEN,
+      refreshToken: process.env.DROPBOX_REFRESH_TOKEN
     });
   }
   return dbx;
