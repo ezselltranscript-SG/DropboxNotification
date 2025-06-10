@@ -9,26 +9,18 @@ let dbx = null;
 // Initialize Dropbox client
 function initializeDropboxClient() {
   if (!dbx) {
-    const config = {
-      clientId: process.env.DROPBOX_APP_KEY,
-      clientSecret: process.env.DROPBOX_APP_SECRET,
-    };
+    // Initialize with just the access token first
+    dbx = new Dropbox({ accessToken: process.env.DROPBOX_ACCESS_TOKEN });
 
-    // If we have an access token, use it
-    if (process.env.DROPBOX_ACCESS_TOKEN) {
-      config.accessToken = process.env.DROPBOX_ACCESS_TOKEN;
+    // Then set up OAuth2 credentials if available
+    if (process.env.DROPBOX_APP_KEY && process.env.DROPBOX_APP_SECRET) {
+      dbx.auth.setClientId(process.env.DROPBOX_APP_KEY);
+      dbx.auth.setClientSecret(process.env.DROPBOX_APP_SECRET);
+
+      if (process.env.DROPBOX_REFRESH_TOKEN) {
+        dbx.auth.setRefreshToken(process.env.DROPBOX_REFRESH_TOKEN);
+      }
     }
-
-    // If we have a refresh token, use it
-    if (process.env.DROPBOX_REFRESH_TOKEN) {
-      config.refreshToken = process.env.DROPBOX_REFRESH_TOKEN;
-    }
-
-    dbx = new Dropbox(config);
-
-    // Set up auth refresh handler
-    dbx.auth.setClientId(process.env.DROPBOX_APP_KEY);
-    dbx.auth.setClientSecret(process.env.DROPBOX_APP_SECRET);
   }
   return dbx;
 }
@@ -39,20 +31,17 @@ async function refreshAccessToken() {
     console.log('🔄 Refreshing access token...');
     const response = await dbx.auth.refreshAccessToken();
     
-    // Update our stored tokens
-    const newTokens = {
-      accessToken: response.result.access_token,
-      refreshToken: response.result.refresh_token
-    };
+    // Update stored tokens
+    process.env.DROPBOX_ACCESS_TOKEN = response.result.access_token;
+    if (response.result.refresh_token) {
+      process.env.DROPBOX_REFRESH_TOKEN = response.result.refresh_token;
+    }
 
-    // Update the client with new tokens
-    dbx = new Dropbox({
-      clientId: process.env.DROPBOX_APP_KEY,
-      clientSecret: process.env.DROPBOX_APP_SECRET,
-      ...newTokens
-    });
-    
-    Object.assign(process.env, newTokens);
+    // Update client with new tokens
+    dbx = new Dropbox({ accessToken: response.result.access_token });
+    if (response.result.refresh_token) {
+      dbx.auth.setRefreshToken(response.result.refresh_token);
+    }
 
     console.log('✅ Access token refreshed successfully');
     return true;
