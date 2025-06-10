@@ -4,51 +4,17 @@ import 'dotenv/config';
 
 let cursor = null;
 let lastModifiedTime = new Date(process.env.LAST_MODIFIED_TIME || 0);
-let dbx = null;
 
-// Initialize Dropbox client
-function initializeDropboxClient() {
-  if (!dbx) {
-    // Initialize with just the access token first
-    dbx = new Dropbox({ accessToken: process.env.DROPBOX_ACCESS_TOKEN });
+// Create a new Dropbox client for each operation
+function createDropboxClient() {
+  const client = new Dropbox({
+    clientId: process.env.DROPBOX_APP_KEY,
+    clientSecret: process.env.DROPBOX_APP_SECRET,
+    accessToken: process.env.DROPBOX_ACCESS_TOKEN,
+    refreshToken: process.env.DROPBOX_REFRESH_TOKEN
+  });
 
-    // Then set up OAuth2 credentials if available
-    if (process.env.DROPBOX_APP_KEY && process.env.DROPBOX_APP_SECRET) {
-      dbx.auth.setClientId(process.env.DROPBOX_APP_KEY);
-      dbx.auth.setClientSecret(process.env.DROPBOX_APP_SECRET);
-
-      if (process.env.DROPBOX_REFRESH_TOKEN) {
-        dbx.auth.setRefreshToken(process.env.DROPBOX_REFRESH_TOKEN);
-      }
-    }
-  }
-  return dbx;
-}
-
-// Refresh access token when it expires
-async function refreshAccessToken() {
-  try {
-    console.log('🔄 Refreshing access token...');
-    const response = await dbx.auth.refreshAccessToken();
-    
-    // Update stored tokens
-    process.env.DROPBOX_ACCESS_TOKEN = response.result.access_token;
-    if (response.result.refresh_token) {
-      process.env.DROPBOX_REFRESH_TOKEN = response.result.refresh_token;
-    }
-
-    // Update client with new tokens
-    dbx = new Dropbox({ accessToken: response.result.access_token });
-    if (response.result.refresh_token) {
-      dbx.auth.setRefreshToken(response.result.refresh_token);
-    }
-
-    console.log('✅ Access token refreshed successfully');
-    return true;
-  } catch (error) {
-    console.error('❌ Failed to refresh access token:', error);
-    return false;
-  }
+  return client;
 }
 
 // Format path for Dropbox API
@@ -74,6 +40,7 @@ function formatDropboxPath(path) {
 // Get metadata for a file
 async function getMetadata(path) {
   try {
+    const dbx = createDropboxClient();
     const formattedPath = formatDropboxPath(path);
     console.log('🔍 Getting metadata for path:', formattedPath);
     
@@ -83,12 +50,6 @@ async function getMetadata(path) {
     });
     return response.result;
   } catch (error) {
-    if (error.status === 401) {
-      const refreshed = await refreshAccessToken();
-      if (refreshed) {
-        return await getMetadata(path);
-      }
-    }
     console.error('❌ Error getting metadata:', error);
     return null;
   }
@@ -97,6 +58,7 @@ async function getMetadata(path) {
 // Get temporary link for a file
 async function getTemporaryLink(path) {
   try {
+    const dbx = createDropboxClient();
     const formattedPath = formatDropboxPath(path);
     console.log('🔍 Getting temporary link for path:', formattedPath);
     
@@ -105,12 +67,6 @@ async function getTemporaryLink(path) {
     });
     return response.result.link;
   } catch (error) {
-    if (error.status === 401) {
-      const refreshed = await refreshAccessToken();
-      if (refreshed) {
-        return await getTemporaryLink(path);
-      }
-    }
     console.error('❌ Error getting temporary link:', error);
     return null;
   }
@@ -119,7 +75,8 @@ async function getTemporaryLink(path) {
 // Main function to list folder changes
 export async function listFolderChanges() {
   try {
-    initializeDropboxClient();
+    // Create a new client for this operation
+    const dbx = createDropboxClient();
 
     if (!cursor) {
       console.log('📥 Getting latest cursor state...');
@@ -208,12 +165,6 @@ export async function listFolderChanges() {
     console.log(`✅ New entries processed: ${newEntries.length}`);
     return newEntries;
   } catch (error) {
-    if (error.status === 401) {
-      const refreshed = await refreshAccessToken();
-      if (refreshed) {
-        return await listFolderChanges();
-      }
-    }
     console.error('❌ Dropbox API error:', error);
     return [];
   }
