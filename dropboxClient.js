@@ -127,6 +127,18 @@ export async function listFolderChanges() {
       const path = formatDropboxPath(rawPath);
       console.log('🔍 Using path:', path);
 
+      // First verify that the path exists and is a folder
+      const metadata = await dbx.filesGetMetadata({
+        path,
+        include_media_info: process.env.INCLUDE_MEDIA === 'true',
+      });
+
+      console.log('🗂 Path metadata:', metadata.result);
+      
+      if (metadata.result['.tag'] !== 'folder') {
+        throw new Error(`Path ${path} is not a folder`);
+      }
+
       // Get initial folder state and cursor
       const response = await dbx.filesListFolder({
         path,
