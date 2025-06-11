@@ -14,11 +14,11 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Dropbox webhook verification
-app.get('/webhook', verifyChallenge);
+// Webhook verification with unique ID
+app.get('/webhook/2257b161-8822-401d-b3f8-ba2e1ae2150a', verifyChallenge);
 
-// Webhook listener
-app.post('/webhook', async (req, res) => {
+// Webhook listener with unique ID
+app.post('/webhook/2257b161-8822-401d-b3f8-ba2e1ae2150a', async (req, res) => {
   console.log('🔔 Received webhook:', JSON.stringify(req.body, null, 2));
   
   // Acknowledge webhook immediately
