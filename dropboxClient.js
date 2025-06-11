@@ -23,7 +23,7 @@ export async function listFolderChanges() {
     console.log('🔄 Listando contenido de la raíz...');
     const rootResponse = await dbx.filesListFolder({
       path: '',
-      recursive: false,
+      recursive: true,
       include_deleted: false
     });
     
