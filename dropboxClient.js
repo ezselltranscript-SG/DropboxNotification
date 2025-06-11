@@ -13,22 +13,39 @@ function createDropboxClient() {
 
 // Get the most recently added file
 export async function listFolderChanges() {
-  const dbx = createDropboxClient();
-  const path = process.env.DROPBOX_FOLDER_PATH || '';
-  
   try {
+    const dbx = createDropboxClient();
+    const path = process.env.DROPBOX_FOLDER_PATH || '';
+    
+    console.log('🔍 Buscando en la ruta:', path || '(raíz)');
+    
     const response = await dbx.filesListFolder({
-      path,
+      path: path || '',
       recursive: true,
-      limit: 1
+      limit: 10,  // Aumentamos el límite para ver más archivos
+      include_deleted: false
     });
 
-    const file = response.result.entries.find(entry => entry['.tag'] === 'file');
-    if (!file) return [];
+    console.log(`📂 Contenido de la carpeta (${response.result.entries.length} elementos):`);
+    response.result.entries.forEach((entry, i) => {
+      console.log(`   ${i + 1}. [${entry['.tag']}] ${entry.name}${entry['.tag'] === 'file' ? ` (${entry.size} bytes)` : ''}`);
+    });
+
+    const files = response.result.entries
+      .filter(entry => entry['.tag'] === 'file')
+      .sort((a, b) => new Date(b.server_modified) - new Date(a.server_modified));
+
+    if (files.length === 0) {
+      console.log('ℹ️ No se encontraron archivos');
+      return [];
+    }
+    
+    const lastFile = files[0];
+    console.log('✅ Archivo más reciente:', lastFile.name);
     
     return [{
-      name: file.name,
-      path: file.path_display
+      name: lastFile.name,
+      path: lastFile.path_display || lastFile.path_lower
     }];
   } catch (error) {
     console.error('❌ Dropbox API Error:', {
