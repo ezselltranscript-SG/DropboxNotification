@@ -15,14 +15,26 @@ function createDropboxClient() {
 export async function listFolderChanges() {
   try {
     const dbx = createDropboxClient();
-    const path = process.env.DROPBOX_FOLDER_PATH || '';
+    const folderPath = process.env.DROPBOX_FOLDER_PATH || '';
     
-    console.log('🔍 Buscando en la ruta:', path || '(raíz)');
+    console.log('🔍 Buscando en la ruta:', folderPath || '(raíz)');
     
+    // Primero listar el contenido de la carpeta principal
+    const folderResponse = await dbx.filesListFolder({
+      path: '',
+      recursive: false
+    });
+    
+    console.log('📦 Contenido de la raíz:');
+    folderResponse.result.entries.forEach((entry, i) => {
+      console.log(`   ${i + 1}. [${entry['.tag']}] ${entry.path_display}`);
+    });
+    
+    // Ahora buscar archivos en la carpeta específica
     const response = await dbx.filesListFolder({
-      path: path || '',
-      recursive: true,
-      limit: 10,  // Aumentamos el límite para ver más archivos
+      path: folderPath,
+      recursive: false,
+      limit: 10,
       include_deleted: false
     });
 
