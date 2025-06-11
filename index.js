@@ -15,7 +15,16 @@ app.get('/health', (req, res) => {
 });
 
 // Webhook verification with unique ID
-app.get('/webhook/2257b161-8822-401d-b3f8-ba2e1ae2150a', verifyChallenge);
+app.get('/webhook/2257b161-8822-401d-b3f8-ba2e1ae2150a', (req, res) => {
+  console.log('🔔 Webhook verification request received');
+  const challenge = req.query.challenge;
+  if (challenge) {
+    console.log('✅ Webhook verification successful');
+    return res.status(200).send(challenge);
+  }
+  console.error('❌ Missing challenge parameter');
+  return res.status(400).send('Missing challenge');
+});
 
 // Webhook listener with unique ID
 app.post('/webhook/2257b161-8822-401d-b3f8-ba2e1ae2150a', async (req, res) => {
@@ -26,7 +35,7 @@ app.post('/webhook/2257b161-8822-401d-b3f8-ba2e1ae2150a', async (req, res) => {
 
   const { list_folder } = req.body;
   if (!list_folder?.accounts?.length) {
-    console.log('⚠️ No accounts in webhook payload');
+    console.log('⚠️ No accounts in webhook payload. Full body:', JSON.stringify(req.body, null, 2));
     return;
   }
 
