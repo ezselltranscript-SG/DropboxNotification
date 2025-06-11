@@ -14,43 +14,33 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Webhook verification with unique ID
+// Webhook verification
 app.get('/webhook/2257b161-8822-401d-b3f8-ba2e1ae2150a', (req, res) => {
-  console.log('🔔 Webhook verification request received');
   const challenge = req.query.challenge;
   if (challenge) {
-    console.log('✅ Webhook verification successful');
     return res.status(200).send(challenge);
   }
-  console.error('❌ Missing challenge parameter');
   return res.status(400).send('Missing challenge');
 });
 
-// Webhook listener with unique ID
+// Webhook listener
 app.post('/webhook/2257b161-8822-401d-b3f8-ba2e1ae2150a', async (req, res) => {
-  console.log('🔔 Received webhook:', JSON.stringify(req.body, null, 2));
-  
   // Acknowledge webhook immediately
   res.status(200).send('Webhook received');
 
   const { list_folder } = req.body;
-  if (!list_folder?.accounts?.length) {
-    console.log('⚠️ No accounts in webhook payload. Full body:', JSON.stringify(req.body, null, 2));
-    return;
-  }
+  if (!list_folder?.accounts?.length) return;
 
   try {
-    console.log('🔍 Processing changes for account:', list_folder.accounts[0]);
     const lastFile = await handleDropboxChanges(list_folder.accounts[0]);
     if (lastFile) {
-      console.log('✅ Last uploaded file:', JSON.stringify(lastFile, null, 2));
+      console.log(JSON.stringify({
+        name: lastFile.name,
+        path: lastFile.path
+      }, null, 2));
     }
   } catch (error) {
-    console.error('❌ Error processing webhook:', {
-      message: error.message,
-      status: error.status,
-      stack: error.stack?.split('\n')[0]
-    });
+    console.error('Error:', error.message);
   }
 });
 

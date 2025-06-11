@@ -31,52 +31,32 @@ function formatDropboxPath(path) {
   return formattedPath;
 }
 
-// Get latest changes
+// Get the most recently added file
 export async function listFolderChanges() {
-  console.log('🔄 Starting listFolderChanges');
   const dbx = createDropboxClient();
   const path = formatDropboxPath(process.env.DROPBOX_FOLDER_PATH || '');
   
   try {
-    console.log('🔍 Listing folder contents:', path);
-    
-    // Primero obtener el cursor actual para la carpeta
+    // Get the most recent file in the folder
     const response = await dbx.filesListFolder({
       path,
       recursive: true,
-      include_deleted: false,
       limit: 1,
-      include_has_explicit_shared_members: false
+      include_deleted: false
     });
-
-    console.log('📊 API Response:', JSON.stringify({
-      entries: response.result.entries.map(e => ({
-        name: e.name,
-        path_display: e.path_display,
-        '.tag': e['.tag']
-      }))
-    }, null, 2));
 
     const files = response.result.entries.filter(entry => entry['.tag'] === 'file');
     
     if (files.length === 0) {
-      console.log('ℹ️ No files found in folder');
+      console.log('No files found in folder');
       return [];
     }
 
     const lastFile = files[0];
-    console.log('✅ Found file:', {
-      name: lastFile.name,
-      path: lastFile.path_display,
-      size: lastFile.size,
-      modified: lastFile.server_modified
-    });
     
     return [{
       name: lastFile.name,
-      path: lastFile.path_display,
-      size: lastFile.size,
-      modified: lastFile.server_modified
+      path: lastFile.path_display
     }];
     
   } catch (error) {
