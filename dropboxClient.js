@@ -17,10 +17,10 @@ export async function listFolderChanges() {
     console.log('🔍 Creando cliente de Dropbox...');
     const dbx = createDropboxClient();
     const folderPath = process.env.DROPBOX_FOLDER_PATH || '';
-    console.log('📂 Ruta de la carpeta:', folderPath || '(raíz)');
+    console.log('📂 Folder path:', folderPath || '(raíz)');
     
     // Primero listar el contenido de la raíz para ver qué hay
-    console.log('🔄 Listando contenido de la raíz...');
+    //console.log('🔄 Listando contenido de la raíz...');
     const rootResponse = await dbx.filesListFolder({
       path: '',
       recursive: true,
@@ -52,10 +52,10 @@ export async function listFolderChanges() {
       .filter(entry => entry['.tag'] === 'file')
       .sort((a, b) => new Date(b.server_modified) - new Date(a.server_modified));
 
-    console.log(`📊 ${files.length} archivos encontrados después de filtrar`);
+    console.log(`📊 ${files.length} files found`);
 
     if (files.length === 0) {
-      console.log('ℹ️ No se encontraron archivos en la carpeta');
+      console.log('ℹ️ There are no files in the folder');
       return [];
     }
     

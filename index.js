@@ -13,8 +13,8 @@ app.get('/webhook/2257b161-8822-401d-b3f8-ba2e1ae2150a', (req, res) => {
 
 // Webhook listener
 app.post('/webhook/2257b161-8822-401d-b3f8-ba2e1ae2150a', async (req, res) => {
-  console.log('🔔 Webhook recibido');
-  console.log('📦 Payload recibido:', JSON.stringify(req.body, null, 2));
+  console.log('🔔 Webhook received');
+  console.log('📦 Payload received:', JSON.stringify(req.body, null, 2));
   
   res.status(200).send('OK');
   
@@ -24,7 +24,7 @@ app.post('/webhook/2257b161-8822-401d-b3f8-ba2e1ae2150a', async (req, res) => {
   }
   
   try {
-    console.log('🔄 Procesando cambios...');
+    console.log('🔄 Processing changes...');
     const file = await handleDropboxChanges();
     if (file) {
       console.log('✅ Archivo encontrado:', JSON.stringify({
