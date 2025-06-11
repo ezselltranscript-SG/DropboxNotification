@@ -27,24 +27,24 @@ export async function listFolderChanges() {
       include_deleted: false
     });
     
-    console.log('📦 Contenido de la raíz:');
+    //console.log('📦 Contenido de la raíz:');
     rootResponse.result.entries.forEach((entry, i) => {
       console.log(`   ${i + 1}. [${entry['.tag']}] ${entry.path_display}`);
     });
     
     // Ahora buscar en la carpeta específica
-    console.log(`🔍 Buscando archivos en: '${folderPath}'`);
+    //console.log(`🔍 Buscando archivos en: '${folderPath}'`);
     const response = await dbx.filesListFolder({
       path: folderPath,
       recursive: true,
       include_deleted: false
     });
 
-    console.log(`📦 Se encontraron ${response.result.entries.length} elementos en la carpeta`);
+    //console.log(`📦 Se encontraron ${response.result.entries.length} elementos en la carpeta`);
     
     // Mostrar información de depuración
     response.result.entries.forEach((entry, i) => {
-      console.log(`   ${i + 1}. [${entry['.tag']}] ${entry.name}${entry['.tag'] === 'file' ? ` (${entry.size} bytes)` : ''}`);
+      //console.log(`   ${i + 1}. [${entry['.tag']}] ${entry.name}${entry['.tag'] === 'file' ? ` (${entry.size} bytes)` : ''}`);
     });
 
     // Filtrar solo archivos y ordenar por fecha
@@ -61,7 +61,7 @@ export async function listFolderChanges() {
     
     // Devolver solo el archivo más reciente
     const lastFile = files[0];
-    console.log('✅ Archivo más reciente:', lastFile.name);
+    console.log('✅ Most recent file:', lastFile.name);
     
     return [{
       name: lastFile.name,
