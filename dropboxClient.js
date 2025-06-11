@@ -36,7 +36,7 @@ export async function listFolderChanges() {
     console.log(`🔍 Buscando archivos en: '${folderPath}'`);
     const response = await dbx.filesListFolder({
       path: folderPath,
-      recursive: false,
+      recursive: true,
       include_deleted: false
     });
 
