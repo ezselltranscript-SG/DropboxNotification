@@ -14,7 +14,7 @@ function createDropboxClient() {
 // Get the most recently added file
 export async function listFolderChanges() {
   try {
-    console.log('🔍 Creando cliente de Dropbox...');
+    //console.log('🔍 Creando cliente de Dropbox...');
     const dbx = createDropboxClient();
     const folderPath = process.env.DROPBOX_FOLDER_PATH || '';
     console.log('📂 Folder path:', folderPath || '(raíz)');
