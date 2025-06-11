@@ -25,22 +25,39 @@ app.get('/webhook/2257b161-8822-401d-b3f8-ba2e1ae2150a', (req, res) => {
 
 // Webhook listener
 app.post('/webhook/2257b161-8822-401d-b3f8-ba2e1ae2150a', async (req, res) => {
-  // Acknowledge webhook immediately
-  res.status(200).send('Webhook received');
-
-  const { list_folder } = req.body;
-  if (!list_folder?.accounts?.length) return;
-
+  console.log('🔔 Webhook received');
+  
   try {
+    // Acknowledge webhook immediately
+    res.status(200).send('Webhook received');
+
+    const { list_folder } = req.body;
+    if (!list_folder?.accounts?.length) {
+      console.log('⚠️ No accounts in webhook payload');
+      return;
+    }
+
+    console.log('🔄 Processing changes for account:', list_folder.accounts[0]);
     const lastFile = await handleDropboxChanges(list_folder.accounts[0]);
+    
     if (lastFile) {
-      console.log(JSON.stringify({
+      console.log('✅ File detected:', JSON.stringify({
         name: lastFile.name,
         path: lastFile.path
       }, null, 2));
+    } else {
+      console.log('ℹ️ No new files found');
     }
   } catch (error) {
-    console.error('Error:', error.message);
+    console.error('❌ Error processing webhook:', {
+      message: error.message,
+      status: error.status,
+      stack: error.stack?.split('\n')[0]
+    });
+    // Asegurarse de responder incluso si hay un error
+    if (!res.headersSent) {
+      res.status(500).send('Error processing webhook');
+    }
   }
 });
 

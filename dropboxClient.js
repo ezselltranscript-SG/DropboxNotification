@@ -37,22 +37,32 @@ export async function listFolderChanges() {
   const path = formatDropboxPath(process.env.DROPBOX_FOLDER_PATH || '');
   
   try {
+    console.log('🔍 Searching in folder path:', path);
+    
     // Get the most recent file in the folder
     const response = await dbx.filesListFolder({
       path,
       recursive: true,
-      limit: 1,
+      limit: 10,  // Aumentamos el límite para asegurarnos de ver archivos
       include_deleted: false
     });
 
-    const files = response.result.entries.filter(entry => entry['.tag'] === 'file');
+    console.log('📄 Found entries:', response.result.entries.length);
+    response.result.entries.forEach(entry => {
+      console.log(`- ${entry['.tag']} ${entry.name} (${entry.path_display})`);
+    });
+
+    const files = response.result.entries
+      .filter(entry => entry['.tag'] === 'file')
+      .sort((a, b) => new Date(b.server_modified) - new Date(a.server_modified));
     
     if (files.length === 0) {
-      console.log('No files found in folder');
+      console.log('❌ No files found in folder');
       return [];
     }
 
     const lastFile = files[0];
+    console.log('✅ Most recent file:', lastFile.name);
     
     return [{
       name: lastFile.name,
