@@ -1,6 +1,7 @@
 import pkg from 'dropbox';
 const { Dropbox } = pkg;
 import 'dotenv/config';
+import fetch from 'node-fetch';
 
 // Create Dropbox client with error handling
 function createDropboxClient() {
@@ -15,7 +16,7 @@ function createDropboxClient() {
   
   return new Dropbox({
     accessToken: token,
-    fetch: require('node-fetch')
+    fetch: fetch
   });
 }
 
