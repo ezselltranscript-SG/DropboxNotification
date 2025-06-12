@@ -209,24 +209,21 @@ async function listFolderChanges() {
         : await dbx.filesListFolder({
             path: folderPath,
             recursive: true,
-            include_deleted: false
+            include_deleted: false,
+            include_has_explicit_shared_members: false,
+            include_mounted_folders: true
           });
 
       // Encontrar el archivo más reciente en este lote
-      const files = response.result.entries.filter(e => e['.tag'] === 'file');
-      const latestInBatch = files.reduce((latest, file) => {
-        const fileTime = file.client_modified ? new Date(file.client_modified) : new Date(0);
-        const latestTime = latest ? new Date(latest.client_modified || 0) : new Date(0);
-        return fileTime > latestTime ? file : latest;
-      }, null);
-
-      // Actualizar el archivo más reciente general
-      if (latestInBatch) {
-        const latestTime = latestFile ? new Date(latestFile.client_modified || 0) : new Date(0);
-        const batchTime = new Date(latestInBatch.client_modified || 0);
+      const files = response.result.entries.filter(entry => entry['.tag'] === 'file');
+      
+      for (const file of files) {
+        // Usar server_modified en lugar de client_modified
+        const fileTime = file.server_modified ? new Date(file.server_modified) : new Date(0);
+        const currentLatestTime = latestFile ? new Date(latestFile.server_modified || 0) : new Date(0);
         
-        if (!latestFile || batchTime > latestTime) {
-          latestFile = latestInBatch;
+        if (!latestFile || fileTime > currentLatestTime) {
+          latestFile = file;
         }
       }
 
