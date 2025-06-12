@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
+import axios from 'axios';
 
 // 1. Configuración inicial
 const app = express();
@@ -348,15 +349,13 @@ app.post('/webhook/:webhookKey', async (req, res) => {
 
       // Enviar a n8n
       try {
-        await fetch('https://n8n-diebotschaft.onrender.com/webhook-test/2257b161-8822-401d-b3f8-ba2e1ae2150a', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            event: 'new_file',
-            name: file.name,
-            path: file.path,
-            timestamp: new Date().toISOString()
-          })
+        await axios.post('https://n8n-diebotschaft.onrender.com/webhook-test/2257b161-8822-401d-b3f8-ba2e1ae2150a', {
+          event: 'new_file',
+          name: file.name,
+          path: file.path,
+          timestamp: new Date().toISOString()
+        }, {
+          headers: { 'Content-Type': 'application/json' }
         });
         console.log('📤 Data sent to n8n webhook');
       } catch (n8nError) {
