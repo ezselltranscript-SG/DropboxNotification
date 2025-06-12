@@ -17,26 +17,14 @@ export async function listFolderChanges() {
     //console.log('🔍 Creando cliente de Dropbox...');
     const dbx = createDropboxClient();
     const folderPath = process.env.DROPBOX_FOLDER_PATH || '';
-    console.log('📂 Folder path:', folderPath || '(raíz)');
+    //console.log('📂 Ruta de la carpeta:', folderPath || '(raíz)');
     
-    // Primero listar el contenido de la raíz para ver qué hay
-    //console.log('🔄 Listando contenido de la raíz...');
-    const rootResponse = await dbx.filesListFolder({
-      path: '',
-      recursive: true,
-      include_deleted: false
-    });
-    
-    //console.log('📦 Contenido de la raíz:');
-    rootResponse.result.entries.forEach((entry, i) => {
-      console.log(`   ${i + 1}. [${entry['.tag']}] ${entry.path_display}`);
-    });
-    
-    // Ahora buscar en la carpeta específica
-    //console.log(`🔍 Buscando archivos en: '${folderPath}'`);
+    // Obtener archivos de la carpeta
+    //console.log('🔄 Listando archivos...');
     const response = await dbx.filesListFolder({
       path: folderPath,
-      recursive: true,
+      recursive: true,  // Cambiado a true para buscar en subcarpetas
+      limit: 10,      // Aumentar el límite para asegurarnos de encontrar archivos
       include_deleted: false
     });
 
@@ -52,16 +40,16 @@ export async function listFolderChanges() {
       .filter(entry => entry['.tag'] === 'file')
       .sort((a, b) => new Date(b.server_modified) - new Date(a.server_modified));
 
-    console.log(`📊 ${files.length} files found`);
+    console.log(`📊 ${files.length} archivos encontrados después de filtrar`);
 
     if (files.length === 0) {
-      console.log('ℹ️ There are no files in the folder');
+      console.log('ℹ️ No se encontraron archivos en la carpeta');
       return [];
     }
     
     // Devolver solo el archivo más reciente
     const lastFile = files[0];
-    console.log('✅ Most recent file:', lastFile.name);
+    console.log('✅ Last file:', lastFile.name);
     
     return [{
       name: lastFile.name,
