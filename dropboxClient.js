@@ -14,53 +14,52 @@ function createDropboxClient() {
 // Get the most recently added file
 export async function listFolderChanges() {
   try {
-    //console.log('🔍 Creando cliente de Dropbox...');
     const dbx = createDropboxClient();
     const folderPath = process.env.DROPBOX_FOLDER_PATH || '';
-    //console.log('📂 Ruta de la carpeta:', folderPath || '(raíz)');
-    
-    // Obtener archivos de la carpeta
-    //console.log('🔄 Listando archivos...');
+
+    // Listar contenido directo de la carpeta principal
     const response = await dbx.filesListFolder({
       path: folderPath,
-      recursive: true,  // Cambiado a true para buscar en subcarpetas
-      limit: 10,      // Aumentar el límite para asegurarnos de encontrar archivos
+      recursive: true,
       include_deleted: false
     });
 
-    //console.log(`📦 Se encontraron ${response.result.entries.length} elementos en la carpeta`);
-    
-    // Mostrar información de depuración
+    console.log(`📦 Contenido directo de ${folderPath}:`);
     response.result.entries.forEach((entry, i) => {
-      //console.log(`   ${i + 1}. [${entry['.tag']}] ${entry.name}${entry['.tag'] === 'file' ? ` (${entry.size} bytes)` : ''}`);
+      console.log(`   ${i + 1}. [${entry['.tag']}] ${entry.name}`);
     });
 
-    // Filtrar solo archivos y ordenar por fecha
-    const files = response.result.entries
-      .filter(entry => entry['.tag'] === 'file')
-      .sort((a, b) => new Date(b.server_modified) - new Date(a.server_modified));
-
-    console.log(`📊 ${files.length} archivos encontrados después de filtrar`);
-
-    if (files.length === 0) {
-      console.log('ℹ️ No se encontraron archivos en la carpeta');
-      return [];
+    // Si hay archivos directos, devolver el más reciente
+    const files = response.result.entries.filter(e => e['.tag'] === 'file');
+    if (files.length > 0) {
+      files.sort((a, b) => new Date(b.server_modified) - new Date(a.server_modified));
+      const lastFile = files[0];
+      console.log('✅ Last file:', lastFile.name);
+      return [{ name: lastFile.name, path: lastFile.path_display || lastFile.path_lower }];
     }
-    
-    // Devolver solo el archivo más reciente
-    const lastFile = files[0];
-    console.log('✅ Last file:', lastFile.name);
-    
-    return [{
-      name: lastFile.name,
-      path: lastFile.path_display || lastFile.path_lower
-    }];
+
+    // Buscar en subcarpetas inmediatas
+    const folders = response.result.entries.filter(e => e['.tag'] === 'folder');
+    for (const folder of folders) {
+      const subResponse = await dbx.filesListFolder({
+        path: folder.path_display,
+        recursive: true,
+        include_deleted: false
+      });
+      const subFiles = subResponse.result.entries.filter(e => e['.tag'] === 'file');
+      if (subFiles.length > 0) {
+        subFiles.sort((a, b) => new Date(b.server_modified) - new Date(a.server_modified));
+        const lastFile = subFiles[0];
+        console.log('✅ Last file in subfolder:', lastFile.name);
+        return [{ name: lastFile.name, path: lastFile.path_display || lastFile.path_lower }];
+      }
+    }
+
+    console.log('ℹ️ No se encontraron archivos en la carpeta ni en subcarpetas inmediatas');
+    return [];
   } catch (error) {
-    console.error('❌ Error en listFolderChanges:', {
-      message: error.message,
-      status: error.status,
-      stack: error.stack?.split('\n')[0]
-    });
+    console.error('❌ Error en listFolderChanges:', error);
     throw error;
   }
 }
+
