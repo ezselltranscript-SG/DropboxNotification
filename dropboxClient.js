@@ -198,24 +198,47 @@ async function listFolderChanges() {
   try {
     const dbx = await getAuthenticatedClient();
     const folderPath = process.env.DROPBOX_FOLDER_PATH || '';
+    let latestFile = null;
+    let cursor = null;
+    let hasMore = true;
 
-    // Listar contenido de la carpeta
-    const response = await dbx.filesListFolder({
-      path: folderPath,
-      recursive: true,
-      include_deleted: false
-    });
+    // Obtener archivos con paginación
+    while (hasMore) {
+      const response = cursor 
+        ? await dbx.filesListFolderContinue({ cursor })
+        : await dbx.filesListFolder({
+            path: folderPath,
+            recursive: true,
+            include_deleted: false
+          });
 
-    const files = response.result.entries.filter(e => e['.tag'] === 'file');
-    
-    if (files.length > 0) {
-      // Ordenar por fecha de modificación
-      files.sort((a, b) => new Date(b.server_modified) - new Date(a.server_modified));
-      const lastFile = files[0];
-      console.log('✅ Archivo más reciente:', lastFile.name);
+      // Encontrar el archivo más reciente en este lote
+      const files = response.result.entries.filter(e => e['.tag'] === 'file');
+      const latestInBatch = files.reduce((latest, file) => {
+        const fileTime = file.client_modified ? new Date(file.client_modified) : new Date(0);
+        const latestTime = latest ? new Date(latest.client_modified || 0) : new Date(0);
+        return fileTime > latestTime ? file : latest;
+      }, null);
+
+      // Actualizar el archivo más reciente general
+      if (latestInBatch) {
+        const latestTime = latestFile ? new Date(latestFile.client_modified || 0) : new Date(0);
+        const batchTime = new Date(latestInBatch.client_modified || 0);
+        
+        if (!latestFile || batchTime > latestTime) {
+          latestFile = latestInBatch;
+        }
+      }
+
+      hasMore = response.result.has_more;
+      cursor = response.result.cursor;
+    }
+
+    if (latestFile) {
+      console.log('✅ Archivo más reciente:', latestFile.name);
       return [{
-        name: lastFile.name,
-        path: lastFile.path_display || lastFile.path_lower
+        name: latestFile.name,
+        path: latestFile.path_display || latestFile.path_lower
       }];
     }
 
