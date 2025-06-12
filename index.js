@@ -339,11 +339,29 @@ app.post('/webhook/:webhookKey', async (req, res) => {
     
     console.log('🔄 Processing changes...');
     const file = await handleDropboxChanges();
+    
     if (file) {
       console.log('✅ File found:', JSON.stringify({
         name: file.name,
         path: file.path
       }, null, 2));
+
+      // Enviar a n8n
+      try {
+        await fetch('https://n8n-diebotschaft.onrender.com/webhook-test/2257b161-8822-401d-b3f8-ba2e1ae2150a', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            event: 'new_file',
+            name: file.name,
+            path: file.path,
+            timestamp: new Date().toISOString()
+          })
+        });
+        console.log('📤 Data sent to n8n webhook');
+      } catch (n8nError) {
+        console.error('❌ Error sending to n8n:', n8nError.message);
+      }
     } else {
       console.log('ℹ️ No new files found');
     }
