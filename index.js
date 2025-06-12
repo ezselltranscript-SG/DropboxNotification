@@ -37,27 +37,28 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // 5. Cargar variables de entorno
-const envPath = path.join(__dirname, '.env');
-console.log(`🔍 Buscando archivo .env en: ${envPath}`);
-
-if (fs.existsSync(envPath)) {
-  console.log('✅ Archivo .env encontrado, cargando variables...');
-  dotenv.config({ path: envPath });
+if (process.env.NODE_ENV !== 'production') {
+  const envPath = path.join(__dirname, '.env');
+  console.log(`🔍 Modo desarrollo: Buscando archivo .env en: ${envPath}`);
   
-  // Verificar variables de entorno requeridas
-  const requiredVars = ['DROPBOX_APP_KEY', 'DROPBOX_APP_SECRET', 'DROPBOX_REDIRECT_URI'];
-  const missingVars = requiredVars.filter(varName => !process.env[varName]);
-  
-  if (missingVars.length > 0) {
-    console.error('❌ Error: Faltan variables de entorno requeridas:', missingVars.join(', '));
-    process.exit(1);
+  if (fs.existsSync(envPath)) {
+    console.log('✅ Archivo .env encontrado, cargando variables...');
+    dotenv.config({ path: envPath });
+  } else {
+    console.log('ℹ️ No se encontró archivo .env, usando variables de entorno del sistema');
   }
-  
-  console.log('✅ Todas las variables de entorno requeridas están presentes');
-} else {
-  console.error('❌ Error: No se encontró el archivo .env');
+}
+
+// Verificar variables de entorno requeridas
+const requiredVars = ['DROPBOX_APP_KEY', 'DROPBOX_APP_SECRET', 'DROPBOX_REDIRECT_URI'];
+const missingVars = requiredVars.filter(varName => !process.env[varName]);
+
+if (missingVars.length > 0) {
+  console.error('❌ Error: Faltan variables de entorno requeridas:', missingVars.join(', '));
   process.exit(1);
 }
+
+console.log('✅ Configuración de entorno verificada correctamente');
 
 // 6. Importar dropboxClient después de cargar las variables de entorno
 import { authUtils, listFolderChanges } from './dropboxClient.js';
