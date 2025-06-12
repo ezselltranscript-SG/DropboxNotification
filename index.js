@@ -27,7 +27,7 @@ app.post('/webhook/2257b161-8822-401d-b3f8-ba2e1ae2150a', async (req, res) => {
     console.log('🔄 Processing changes...');
     const file = await handleDropboxChanges();
     if (file) {
-      console.log('✅ Archivo encontrado:', JSON.stringify({
+      console.log('✅ File found:', JSON.stringify({
         name: file.name,
         path: file.path
       }, null, 2));

@@ -24,9 +24,9 @@ export async function listFolderChanges() {
       include_deleted: false
     });
 
-    console.log(`📦 Contenido directo de ${folderPath}:`);
+    //console.log(`📦 Contenido directo de ${folderPath}:`);
     response.result.entries.forEach((entry, i) => {
-      console.log(`   ${i + 1}. [${entry['.tag']}] ${entry.name}`);
+      //console.log(`   ${i + 1}. [${entry['.tag']}] ${entry.name}`);
     });
 
     // Si hay archivos directos, devolver el más reciente
