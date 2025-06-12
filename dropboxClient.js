@@ -235,7 +235,7 @@ async function listFolderChanges() {
     }
 
     if (latestFile) {
-      console.log('✅ Archivo más reciente:', latestFile.name);
+      console.log('✅ Most recent file:', latestFile.name);
       return [{
         name: latestFile.name,
         path: latestFile.path_display || latestFile.path_lower
